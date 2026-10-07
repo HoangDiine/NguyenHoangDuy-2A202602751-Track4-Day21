@@ -1,11 +1,9 @@
 # Báo cáo Day 6: QA nhãn 2D bằng LiDAR
 
-> Trước khi nộp, hãy điền bốn trường thông tin học viên còn thiếu bên dưới.
-
-- **Họ tên:** [ĐIỀN]
-- **MSSV:** [ĐIỀN] (phải trùng với MSSV trong tên repo `<HoVaTen>-<MSSV>-Track4-Day21`)
-- **Lớp:** [ĐIỀN]
-- **Link repo:** [ĐIỀN]
+- **Họ tên:** Nguyễn Hoàng Duy
+- **MSSV:** 2A202602751
+- **Lớp:** K4
+- **Link repo:** https://github.com/HoangDiine/NguyenHoangDuy-2A202602751-Track4-Day21
 - **Topic:** F — Hỗ trợ gán nhãn bằng LiDAR
 - **Dataset:** `data/kitti_mini`
 - **Các frame đã dùng:** 000001, 000004, 000007, 000008, 000009, 000010, 000011, 000012, 000015, 000016, 000019, 000021, 000023, 000025, 000031, 000032, 000043, 000048, 000049, 000061
@@ -69,13 +67,18 @@ CSV tổng hợp: `results/topic_f_iou_by_occlusion.csv`; biểu đồ: `results
 
 ## 4. Khuyến nghị nếu triển khai thật
 
-Dùng trong bước QA ngoại tuyến: hiển thị bbox 2D hiện có, box chiếu từ 3D và box từ điểm LiDAR cùng số điểm hỗ trợ để người gán nhãn đối chiếu. Box từ điểm LiDAR có thể chặt nhưng kém ổn định ở xa; không tự thay nhãn bằng box suy ra từ một vài điểm. Theo dõi IoU và số điểm theo khoảng cách, và để người xem quyết định khi hai nguồn không khớp.
+**Use-case:** Dùng trong pipeline kiểm duyệt nhãn cho bộ dữ liệu xe tự hành, sau khi ghép ảnh camera với LiDAR và trước khi người gán nhãn chốt 2D box. Hiển thị nhãn hiện có, box chiếu từ 8 góc 3D, box từ điểm LiDAR và số điểm hỗ trợ để reviewer quyết định.
+
+**Đánh đổi:** Trên máy hiện tại, xử lý 20 frame / 72 xe mất `2.978 s` (khoảng `149 ms/frame`, gồm khởi động Python và lưu ảnh). Vì đây là bước QA, nên chạy theo lô ở nền thay vì chặn luồng perception thời gian thực; đổi lại, cần thêm CPU và thời gian reviewer xem cảnh báo. Thời gian này chỉ đại diện cho máy và tập mini đang dùng.
+
+**Chỉ số log và cảnh báo:** Ghi `points_in_3d_box`, `lidar_points_has_area`, IoU giữa box gợi ý với nhãn 2D, và tỷ lệ object bị gắn cờ theo frame. Đưa object vào hàng chờ review nếu có dưới `5` điểm hỗ trợ, box suy biến hoặc IoU dưới `0.5`; không tự ghi đè nhãn. Hai ngưỡng là heuristic ban đầu và cần hiệu chỉnh trên validation lớn hơn để cân bằng cảnh báo nhầm với lỗi bị bỏ sót.
 
 ## 5. Cách chạy lại
 
 ```bash
 python -m src.topic_f_qa --data-root data/kitti_mini --out-dir results --demo-frame 000004 --demo-car-index 0 --failure-frame 000009 --failure-car-index 2
 python -m starter.projection --data-root data/kitti_mini --frame 000004
+python tools/check_submission.py
 ```
 
 Kiểm tra tái lập đã chạy lần hai bằng lệnh sau; cả ba CSV khớp hoàn toàn với lần chạy đầu. Thư mục kiểm tra tạm đã được xóa sau khi so sánh.
@@ -89,4 +92,4 @@ python -c "from pathlib import Path; import filecmp; names=['topic_f_object_iou.
 
 | Công cụ | Dùng cho việc gì | Kiểm chứng kết quả |
 |---|---|---|
-| OpenAI Codex | Phân tích yêu cầu, viết script, tạo bảng và ảnh từ dữ liệu | Đã chạy script trên 20 frame; đối chiếu 72 dòng object với bảng tổng hợp và kiểm tra frame `000009` có 1 điểm trong box. Người nộp cần đọc/hiểu code và tự chạy lại trước khi nộp. |
+| OpenAI Codex | Phân tích yêu cầu; hỗ trợ viết phép chiếu và script Topic F; tạo bảng, biểu đồ, ảnh demo/failure và biên tập report | Đã chạy trên 20 frame KITTI (72 xe); kiểm tra số liệu frame `000009`, xem ảnh failure, chạy lại và so sánh ba CSV byte-for-byte. Người nộp cần đọc và giải thích được code cũng như giới hạn của các ngưỡng heuristic. |
