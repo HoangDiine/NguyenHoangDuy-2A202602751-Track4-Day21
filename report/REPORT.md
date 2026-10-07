@@ -60,7 +60,12 @@ CSV tổng hợp: `results/topic_f_iou_by_occlusion.csv`; biểu đồ: `results
 
 ![Xe xa chỉ có một điểm LiDAR](../results/figures/fail_01_sparse_lidar_car_000009.png)
 
-Frame `000009`, Car #2 ở `68.25 m`, không bị che khuất/cắt mép, có 1 điểm trong 3D box. Box từ điểm suy biến, không có diện tích và IoU bằng 0; box chiếu 8 góc có IoU 0.977. Lớp debug: **Preprocess / độ phủ cảm biến** — số return thưa ở xa không đủ tạo min/max box ổn định. Đây là mismatch cần xem xét, không tự chứng minh bbox 2D sai.
+- **Trường hợp:** KITTI mini, frame `000009`, Car #2 ở độ sâu camera `68.25 m`; nhãn có `truncated=0`, `occluded=0`.
+- **Quan sát:** Chỉ có `1` điểm LiDAR trong box 3D. Box 2D lấy từ điểm đó suy biến, IoU với nhãn 2D là `0.000`; box tạo bằng cách chiếu 8 góc 3D có IoU `0.977`. Ảnh có toàn cảnh và crop phóng to, trong đó box từ điểm hiện thành dấu X vì không có diện tích.
+- **Khi nào sai:** Cách tạo box bằng min/max điểm LiDAR không đáng tin khi xe ở xa và số điểm phản hồi trong box 3D quá ít.
+- **Nguyên nhân:** Ở khoảng cách xa, LiDAR chỉ trả về một điểm trên xe này. Một điểm không thể mô tả chiều rộng và chiều cao của xe, nên phép lấy min/max tạo ra box suy biến.
+- **Lớp debug:** **Preprocess / độ phủ cảm biến**. Bằng chứng hiện tại nghiêng về thiếu điểm LiDAR, không cho thấy nhãn 2D sai hay phép chiếu 8 góc sai.
+- **Cách phát hiện khi chạy thật:** Ghi `points_in_3d_box`, kiểm tra box có diện tích, và so IoU box gợi ý với nhãn 2D. Cảnh báo để người xem lại nếu có dưới `5` điểm hỗ trợ hoặc box suy biến; trong bước QA có nhãn 2D, cũng cảnh báo khi IoU dưới `0.5`. Ngưỡng `5` là heuristic ban đầu — failure này có `1` điểm — cần hiệu chỉnh trên tập validation lớn hơn; cảnh báo không tự ghi đè nhãn.
 
 ## 4. Khuyến nghị nếu triển khai thật
 
