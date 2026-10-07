@@ -1,0 +1,25 @@
+depth_bin,truncated_max,occluded,method,method_label,n_objects,n_boxes_with_area,median_iou,median_points_in_3d_box,median_depth_m
+all,0.1,0,projected_corners,Projected 3D corners,33,33,0.9732200547497134,176.0,25.97
+all,0.1,0,lidar_points,LiDAR points in 3D box,33,32,0.739751638230744,176.0,25.97
+all,0.1,1,projected_corners,Projected 3D corners,12,12,0.9735989344160463,361.0,16.060000000000002
+all,0.1,1,lidar_points,LiDAR points in 3D box,12,12,0.65750841681606,361.0,16.060000000000002
+all,0.1,2,projected_corners,Projected 3D corners,16,16,0.9705595750561535,49.0,30.425
+all,0.1,2,lidar_points,LiDAR points in 3D box,16,16,0.43539912706280237,49.0,30.425
+<20m,0.1,0,projected_corners,Projected 3D corners,12,12,0.9755070563624904,1022.0,12.0
+<20m,0.1,0,lidar_points,LiDAR points in 3D box,12,12,0.8590863036098345,1022.0,12.0
+<20m,0.1,1,projected_corners,Projected 3D corners,8,8,0.9759064791282095,474.5,13.955
+<20m,0.1,1,lidar_points,LiDAR points in 3D box,8,8,0.7245470045808055,474.5,13.955
+<20m,0.1,2,projected_corners,Projected 3D corners,1,1,0.9663012576153752,71.0,19.85
+<20m,0.1,2,lidar_points,LiDAR points in 3D box,1,1,0.661576168853039,71.0,19.85
+20-40m,0.1,0,projected_corners,Projected 3D corners,11,11,0.9669282727866185,176.0,26.41
+20-40m,0.1,0,lidar_points,LiDAR points in 3D box,11,11,0.7891935926773758,176.0,26.41
+20-40m,0.1,1,projected_corners,Projected 3D corners,3,3,0.9695534897583151,33.0,26.83
+20-40m,0.1,1,lidar_points,LiDAR points in 3D box,3,3,0.5075870708903774,33.0,26.83
+20-40m,0.1,2,projected_corners,Projected 3D corners,13,13,0.9701812852632052,50.0,29.07
+20-40m,0.1,2,lidar_points,LiDAR points in 3D box,13,13,0.48511024683242643,50.0,29.07
+>=40m,0.1,0,projected_corners,Projected 3D corners,10,10,0.9742255730763068,13.0,56.785
+>=40m,0.1,0,lidar_points,LiDAR points in 3D box,10,9,0.19242730077061584,13.0,56.785
+>=40m,0.1,1,projected_corners,Projected 3D corners,1,1,0.9731961226235505,20.0,42.85
+>=40m,0.1,1,lidar_points,LiDAR points in 3D box,1,1,0.5764107221386731,20.0,42.85
+>=40m,0.1,2,projected_corners,Projected 3D corners,2,2,0.9798371799366951,14.0,55.39
+>=40m,0.1,2,lidar_points,LiDAR points in 3D box,2,2,0.21276661856136203,14.0,55.39

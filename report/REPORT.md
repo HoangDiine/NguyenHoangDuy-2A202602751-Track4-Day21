@@ -32,9 +32,27 @@ Box từ điểm LiDAR có diện tích ở 10/11 xe sạch trong nhóm xa; fram
 
 CSV theo từng object: `results/topic_f_object_iou.csv`; bảng tổng hợp: `results/topic_f_iou_by_distance.csv`; plot: `results/figures/topic_f_iou_by_distance.png`.
 
+### CP3: kết quả theo mức che khuất
+
+So sánh ba mức `occluded = 0/1/2` trên cùng dataset KITTI mini và class Car, giữ `truncated <= 0.1`. Sáu xe có `occluded = 3` không nằm trong ba mức này nên được loại khỏi bảng.
+
+| Mức che khuất | n xe | IoU median, 8 góc 3D | IoU median, điểm LiDAR |
+|---:|---:|---:|---:|
+| 0 | 33 | 0.973 | 0.740 |
+| 1 | 12 | 0.974 | 0.658 |
+| 2 | 16 | 0.971 | 0.435 |
+
+Khi mức che khuất tăng từ 0 lên 2, IoU median của box từ điểm LiDAR giảm từ 0.740 xuống 0.435; box chiếu từ 8 góc gần như ổn định, từ 0.973 xuống 0.971. Đây là xu hướng mô tả trong mẫu hiện có: phân bố khoảng cách giữa các mức che khuất không giống nhau, nên không thể kết luận che khuất là nguyên nhân duy nhất.
+
+Đối chiếu riêng vùng `20–40 m` cho kết quả cùng chiều: IoU box LiDAR lần lượt là 0.789 / 0.508 / 0.485 với `n = 11 / 3 / 13`; IoU box 8 góc là 0.967 / 0.970 / 0.970. Nhóm `occluded = 1` chỉ có 3 xe nên kết quả nhóm này cần được xem thận trọng.
+
+CSV tổng hợp: `results/topic_f_iou_by_occlusion.csv`; biểu đồ: `results/figures/topic_f_iou_by_occlusion.png`.
+
 ![So sánh hai box trên KITTI](../results/figures/topic_f_demo_000004.png)
 
 ![IoU theo khoảng cách](../results/figures/topic_f_iou_by_distance.png)
+
+![IoU theo mức che khuất](../results/figures/topic_f_iou_by_occlusion.png)
 
 ![Projection baseline trên toàn ảnh](../results/figures/overlay_000004_r0.0_p0.0_y0.0_t0.0_0.0_0.0.png)
 
@@ -53,6 +71,13 @@ Dùng trong bước QA ngoại tuyến: hiển thị bbox 2D hiện có, box chi
 ```bash
 python -m src.topic_f_qa --data-root data/kitti_mini --out-dir results --demo-frame 000004 --demo-car-index 0 --failure-frame 000009 --failure-car-index 2
 python -m starter.projection --data-root data/kitti_mini --frame 000004
+```
+
+Kiểm tra tái lập đã chạy lần hai bằng lệnh sau; cả ba CSV khớp hoàn toàn với lần chạy đầu. Thư mục kiểm tra tạm đã được xóa sau khi so sánh.
+
+```bash
+python -m src.topic_f_qa --data-root data/kitti_mini --out-dir results/repro_check --demo-frame 000004 --demo-car-index 0 --failure-frame 000009 --failure-car-index 2
+python -c "from pathlib import Path; import filecmp; names=['topic_f_object_iou.csv','topic_f_iou_by_distance.csv','topic_f_iou_by_occlusion.csv']; ok=all(filecmp.cmp(Path('results')/n, Path('results/repro_check')/n, shallow=False) for n in names); print('GIỐNG HỆT' if ok else 'KHÁC NHAU'); assert ok"
 ```
 
 ## 6. Khai báo sử dụng AI

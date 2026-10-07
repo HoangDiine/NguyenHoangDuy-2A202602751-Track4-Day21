@@ -18,6 +18,7 @@ from starter.projection import box3d_corners_cam, cam_to_image, velo_to_cam
 
 
 DEPTH_BINS = ("<20m", "20-40m", ">=40m")
+OCCLUSION_LEVELS = (0, 1, 2)
 METHODS = (
     ("projected_corners", "Projected 3D corners", "#2878b5"),
     ("lidar_points", "LiDAR points in 3D box", "#ed8b23"),
@@ -183,6 +184,41 @@ def build_summary(rows: list[dict]) -> list[dict]:
     return summary
 
 
+def build_occlusion_summary(rows: list[dict]) -> list[dict]:
+    """Compare box IoU by KITTI occlusion level, holding class and truncation fixed."""
+    eligible = [
+        row for row in rows
+        if float(row["truncated"]) <= 0.1 and int(row["occluded"]) in OCCLUSION_LEVELS
+    ]
+    summary = []
+    for depth_name in ("all", *DEPTH_BINS):
+        for occluded in OCCLUSION_LEVELS:
+            group = [
+                row for row in eligible
+                if int(row["occluded"]) == occluded
+                and (depth_name == "all" or row["depth_bin"] == depth_name)
+            ]
+            point_counts = [row["points_in_3d_box"] for row in group]
+            depths = [row["depth_m"] for row in group]
+            for method_key, method_label, _ in METHODS:
+                iou_key = f"{method_key}_iou"
+                area_key = f"{method_key}_has_area"
+                ious = [row[iou_key] for row in group]
+                summary.append({
+                    "depth_bin": depth_name,
+                    "truncated_max": 0.1,
+                    "occluded": occluded,
+                    "method": method_key,
+                    "method_label": method_label,
+                    "n_objects": len(group),
+                    "n_boxes_with_area": sum(bool(row[area_key]) for row in group),
+                    "median_iou": float(np.median(ious)) if ious else "",
+                    "median_points_in_3d_box": float(np.median(point_counts)) if point_counts else "",
+                    "median_depth_m": float(np.median(depths)) if depths else "",
+                })
+    return summary
+
+
 def write_csv(path: Path, rows: list[dict]) -> None:
     if not rows:
         raise ValueError(f"Không có dòng để ghi vào {path}")
@@ -223,6 +259,35 @@ def plot_summary(summary: list[dict], output_path: Path) -> None:
     fig.legend(handles, labels, loc="lower center", ncol=2, frameon=False)
     fig.suptitle("Topic F: 2D box consistency by camera depth")
     fig.tight_layout(rect=(0, 0.1, 1, 0.93))
+    fig.savefig(output_path, dpi=180, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_occlusion_summary(summary: list[dict], output_path: Path) -> None:
+    lookup = {
+        (int(row["occluded"]), row["method"]): row
+        for row in summary if row["depth_bin"] == "all"
+    }
+    x = np.arange(len(OCCLUSION_LEVELS))
+    fig, ax = plt.subplots(figsize=(7, 4.5))
+
+    for method_key, method_label, color in METHODS:
+        values = [float(lookup[(level, method_key)]["median_iou"]) for level in OCCLUSION_LEVELS]
+        ax.plot(x, values, marker="o", linewidth=2, color=color, label=method_label)
+        for x_pos, value in zip(x, values):
+            ax.annotate(f"{value:.3f}", (x_pos, value), xytext=(0, 8),
+                        textcoords="offset points", ha="center", fontsize=8)
+
+    counts = [int(lookup[(level, METHODS[0][0])]["n_objects"]) for level in OCCLUSION_LEVELS]
+    ax.set_xticks(x, [f"{level}\nn={count}" for level, count in zip(OCCLUSION_LEVELS, counts)])
+    ax.set_xlabel("KITTI occlusion level (0 = visible, 2 = heavily occluded)")
+    ax.set_ylabel("Median IoU against KITTI 2D label")
+    ax.set_ylim(0.0, 1.05)
+    ax.set_title("Topic F: suggested 2D box quality by occlusion")
+    ax.grid(axis="y", alpha=0.25)
+    ax.set_axisbelow(True)
+    ax.legend(frameon=False)
+    fig.tight_layout()
     fig.savefig(output_path, dpi=180, bbox_inches="tight")
     plt.close(fig)
 
@@ -319,12 +384,17 @@ def main() -> None:
 
     rows, frame_ids = analyze_dataset(args.data_root)
     summary = build_summary(rows)
+    occlusion_summary = build_occlusion_summary(rows)
     objects_csv = out_dir / "topic_f_object_iou.csv"
     summary_csv = out_dir / "topic_f_iou_by_distance.csv"
     figure_path = figures_dir / "topic_f_iou_by_distance.png"
+    occlusion_csv = out_dir / "topic_f_iou_by_occlusion.csv"
+    occlusion_figure = figures_dir / "topic_f_iou_by_occlusion.png"
     write_csv(objects_csv, rows)
     write_csv(summary_csv, summary)
+    write_csv(occlusion_csv, occlusion_summary)
     plot_summary(summary, figure_path)
+    plot_occlusion_summary(occlusion_summary, occlusion_figure)
 
     if args.demo_frame not in frame_ids:
         raise ValueError(f"Không tìm thấy demo frame {args.demo_frame} trong {args.data_root}")
@@ -351,6 +421,15 @@ def main() -> None:
     print(f"objects_csv={objects_csv}")
     print(f"summary_csv={summary_csv}")
     print(f"iou_plot={figure_path}")
+    for row in occlusion_summary:
+        if row["depth_bin"] != "all":
+            continue
+        print(
+            f"truncated<=0.1 occluded={row['occluded']} {row['method']}: "
+            f"median_IoU={row['median_iou']:.3f} n={row['n_objects']}"
+        )
+    print(f"occlusion_csv={occlusion_csv}")
+    print(f"occlusion_plot={occlusion_figure}")
     print(f"demo_image={demo_path}")
     print(
         f"failure_image={failure_path} points={failure['points_in_3d_box']} "
