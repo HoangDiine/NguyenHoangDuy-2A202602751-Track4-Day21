@@ -1,0 +1,13 @@
+subset,depth_bin,method,method_label,n_objects,n_boxes_with_area,median_iou,median_points_in_3d_box
+clean,<20m,projected_corners,Projected 3D corners,20,20,0.9755070563624904,759.0
+clean,<20m,lidar_points,LiDAR points in 3D box,20,20,0.8084298595991752,759.0
+clean,20-40m,projected_corners,Projected 3D corners,14,14,0.9680594176392889,127.0
+clean,20-40m,lidar_points,LiDAR points in 3D box,14,14,0.7145046739817345,127.0
+clean,>=40m,projected_corners,Projected 3D corners,11,11,0.9732200547497134,13.0
+clean,>=40m,lidar_points,LiDAR points in 3D box,11,10,0.23265973774809343,13.0
+all,<20m,projected_corners,Projected 3D corners,32,31,0.9706566950170028,890.0
+all,<20m,lidar_points,LiDAR points in 3D box,32,32,0.790989787041604,890.0
+all,20-40m,projected_corners,Projected 3D corners,27,27,0.9693536791289407,74.0
+all,20-40m,lidar_points,LiDAR points in 3D box,27,27,0.546665264076624,74.0
+all,>=40m,projected_corners,Projected 3D corners,13,13,0.9752310914029001,13.0
+all,>=40m,lidar_points,LiDAR points in 3D box,13,12,0.23265973774809343,13.0
